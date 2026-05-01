@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InsureIQ — Premium Estimator</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --black2: #111111;
+    --black3: #1a1a1a;
+    --black4: #222222;
+    --red: #c0152a;
+    --red-bright: #e0162f;
+    --red-dim: #7a0d1a;
+    --red-glow: rgba(192,21,42,0.18);
+    --white: #f5f5f0;
+    --white2: #c8c8c0;
+    --white3: #8a8a82;
+    --border: rgba(255,255,255,0.07);
+    --border-red: rgba(192,21,42,0.4);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Subtle grid texture */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .page { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 3rem 2rem 4rem; }
+
+  /* Header */
+  .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 3rem; animation: slideDown 0.5s ease; }
+  .brand-icon {
+    width: 44px; height: 44px;
+    background: var(--red); display: flex; align-items: center; justify-content: center;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+  .brand-icon svg { width: 20px; height: 20px; fill: white; }
+  .brand-name { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 3px; color: var(--white); }
+  .brand-tag { font-size: 11px; color: var(--white3); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+
+  .hero { margin-bottom: 2.5rem; animation: slideDown 0.5s 0.1s ease both; }
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(42px, 8vw, 72px);
+    line-height: 0.95; letter-spacing: 2px;
+    color: var(--white);
+    margin-bottom: 1rem;
+  }
+  .hero h1 span { color: var(--red); }
+  .hero p { font-size: 15px; color: var(--white3); max-width: 480px; line-height: 1.65; }
+
+  /* Red accent line */
+  .accent-line {
+    height: 2px;
+    background: linear-gradient(90deg, var(--red), transparent);
+    margin-bottom: 2.5rem;
+    animation: slideRight 0.8s 0.2s ease both;
+  }
+
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideRight { from { width: 0; } to { width: 100%; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* Section headers */
+  .section-head {
+    display: flex; align-items: center; gap: 12px;
+    margin: 2rem 0 1.25rem;
+  }
+  .section-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; color: var(--red);
+    border: 1px solid var(--red-dim); padding: 2px 7px;
+    letter-spacing: 1px;
+  }
+  .section-label {
+    font-size: 11px; font-weight: 500; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--white3);
+  }
+  .section-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* Form grid */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+
+  .field { display: flex; flex-direction: column; gap: 7px; }
+  .field label {
+    font-size: 11px; font-weight: 500; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--white3);
+  }
+  .field input, .field select {
+    height: 42px; padding: 0 14px;
+    background: var(--black3);
+    border: 1px solid var(--border);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 300;
+    outline: none; width: 100%;
+    transition: border-color 0.2s, background 0.2s;
+    appearance: none; -webkit-appearance: none;
+  }
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a8a82'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--red);
+    background: var(--black4);
+    box-shadow: inset 0 0 0 1px var(--red-dim);
+  }
+  .field input::placeholder { color: var(--white3); }
+
+  /* CTA Button */
+  .cta-wrap { margin-top: 2.5rem; position: relative; }
+  .predict-btn {
+    width: 100%; height: 58px;
+    background: var(--red);
+    color: white; border: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 4px;
+    cursor: pointer; position: relative; overflow: hidden;
+    transition: background 0.2s;
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  }
+  .predict-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.5s;
+  }
+  .predict-btn:hover { background: var(--red-bright); }
+  .predict-btn:hover::before { transform: translateX(100%); }
+  .predict-btn:active { transform: scale(0.99); }
+  .predict-btn:disabled {
+    background: var(--black4); color: var(--white3); cursor: not-allowed;
+    clip-path: none;
+  }
+  .btn-corner {
+    position: absolute; bottom: 0; right: 0;
+    width: 16px; height: 16px;
+    border-top: 2px solid rgba(255,255,255,0.2);
+    border-left: 2px solid rgba(255,255,255,0.2);
+    pointer-events: none;
+  }
+
+  /* Loading */
+  .loading {
+    display: flex; align-items: center; gap: 14px;
+    padding: 2rem 0; color: var(--white3); font-size: 13px;
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+  .spinner {
+    width: 20px; height: 20px;
+    border: 1.5px solid var(--black4);
+    border-top-color: var(--red);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  .dot { animation: pulse 1.2s ease-in-out infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  /* Result Panel */
+  .result-panel {
+    margin-top: 2rem;
+    border: 1px solid var(--border);
+    position: relative;
+    animation: fadeUp 0.4s ease;
+    background: var(--black2);
+  }
+  .result-panel::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--red), var(--red-dim), transparent);
+  }
+
+  .result-hero {
+    padding: 2rem 2rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .result-left {}
+  .result-eyebrow {
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--red); margin-bottom: 8px; font-weight: 500;
+  }
+  .result-amount {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 10vw, 80px);
+    line-height: 1; color: var(--white);
+    letter-spacing: 2px;
+  }
+  .result-amount span { color: var(--red); }
+  .result-note { font-size: 12px; color: var(--white3); margin-top: 6px; letter-spacing: 0.5px; }
+
+  .risk-pill-wrap { text-align: right; }
+  .risk-pill-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--white3); margin-bottom: 8px; }
+  .risk-pill {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px; font-weight: 500;
+    padding: 6px 18px;
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+  .risk-Low    { background: rgba(22,100,22,0.2); color: #6fcf6f; border: 1px solid rgba(80,180,80,0.3); }
+  .risk-Medium { background: rgba(180,120,0,0.2); color: #f0b429; border: 1px solid rgba(200,150,0,0.3); }
+  .risk-High   { background: rgba(192,21,42,0.2); color: #f06070; border: 1px solid rgba(192,21,42,0.4); }
+
+  /* Risk bar */
+  .risk-section { padding: 1.5rem 2rem; border-bottom: 1px solid var(--border); }
+  .risk-bar-row { display: flex; align-items: center; gap: 16px; }
+  .risk-bar-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--white3); min-width: 80px; }
+  .risk-track { flex: 1; height: 4px; background: var(--black4); position: relative; }
+  .risk-fill { height: 100%; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); position: relative; }
+  .risk-fill::after { content: ''; position: absolute; right: -1px; top: -3px; width: 10px; height: 10px; border-radius: 50%; background: inherit; }
+  .risk-score-num { font-family: 'DM Mono', monospace; font-size: 14px; min-width: 42px; text-align: right; }
+
+  /* Factors */
+  .factors-section { padding: 1.5rem 2rem; }
+  .factors-title { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--white3); margin-bottom: 1rem; }
+  .factors-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .factor {
+    background: var(--black3); border: 1px solid var(--border);
+    padding: 14px; position: relative; overflow: hidden;
+  }
+  .factor::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .factor.inc::before { background: var(--red); }
+  .factor.dec::before { background: #3a9a3a; }
+  .factor.neu::before { background: var(--white3); }
+  .factor-name { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--white3); margin-bottom: 6px; }
+  .factor-impact { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+  .factor-impact.inc { color: #f06070; }
+  .factor-impact.dec { color: #6fcf6f; }
+  .factor-impact.neu { color: var(--white3); }
+  .factor-note { font-size: 11px; color: var(--white3); line-height: 1.4; }
+
+  .impact-arrow { font-size: 16px; line-height: 1; }
+
+  /* Footer strip */
+  .result-footer {
+    padding: 1rem 2rem; border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .result-footer-text { font-size: 11px; color: var(--white3); letter-spacing: 1px; }
+  .mono-tag { font-family: 'DM Mono', monospace; color: var(--red); font-size: 11px; }
+
+  /* Error */
+  .error-box {
+    margin-top: 1.5rem; padding: 16px 20px;
+    border: 1px solid var(--red-dim); background: rgba(192,21,42,0.08);
+    color: #f06070; font-size: 13px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .error-icon { font-size: 16px; flex-shrink: 0; }
+
+  /* Corner decorations */
+  .corner-tl, .corner-br {
+    position: absolute; width: 12px; height: 12px;
+  }
+  .corner-tl { top: -1px; left: -1px; border-top: 2px solid var(--red); border-left: 2px solid var(--red); }
+  .corner-br { bottom: -1px; right: -1px; border-bottom: 2px solid var(--red); border-right: 2px solid var(--red); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7v5c0 5.55 4.16 10.74 10 12 5.84-1.26 10-6.45 10-12V7L12 2zm-1 14l-4-4 1.41-1.41L11 13.17l6.59-6.59L19 8l-8 8z"/></svg>
+    </div>
+    <div>
+      <div class="brand-name">InsureIQ</div>
+      <div class="brand-tag">Premium Prediction Engine</div>
+    </div>
+  </div>
+
+  <div class="hero">
+    <h1>CALCULATE<br>YOUR <span>RISK</span><br>PREMIUM</h1>
+    <p>Powered by a Random Forest model trained on 1.2 million insurance records. Get your personalized annual premium estimate instantly.</p>
+  </div>
+
+  <div class="accent-line"></div>
+
+  <!-- Section 01 -->
+  <div class="section-head">
+    <div class="section-num">01</div>
+    <div class="section-label">Personal Information</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="form-grid">
+    <div class="field"><label>Age</label><input type="number" id="age" min="18" max="100" value="30" placeholder="18–100"></div>
+    <div class="field"><label>Gender</label><select id="gender"><option>Female</option><option>Male</option></select></div>
+    <div class="field"><label>Annual Income ($)</label><input type="number" id="income" value="50000" placeholder="USD"></div>
+    <div class="field"><label>Marital Status</label><select id="marital"><option>Single</option><option>Married</option><option>Divorced</option></select></div>
+    <div class="field"><label>Dependents</label><input type="number" id="dependents" min="0" max="10" value="1"></div>
+    <div class="field"><label>Education Level</label><select id="education"><option>High School</option><option>Bachelor's</option><option>Master's</option><option>PhD</option></select></div>
+  </div>
+
+  <!-- Section 02 -->
+  <div class="section-head">
+    <div class="section-num">02</div>
+    <div class="section-label">Health &amp; Lifestyle</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="form-grid">
+    <div class="field"><label>Occupation</label><select id="occupation"><option>Employed</option><option>Self-Employed</option><option>Unemployed</option></select></div>
+    <div class="field"><label>Health Score (0–100)</label><input type="number" id="health" min="0" max="100" value="60"></div>
+    <div class="field"><label>Smoking Status</label><select id="smoking"><option value="No">Non-smoker</option><option value="Yes">Smoker</option></select></div>
+    <div class="field"><label>Exercise Frequency</label><select id="exercise"><option>Daily</option><option>Weekly</option><option>Monthly</option><option>Rarely</option></select></div>
+    <div class="field"><label>Credit Score</label><input type="number" id="credit" min="300" max="850" value="650"></div>
+    <div class="field"><label>Customer Feedback</label><select id="feedback"><option>Good</option><option>Average</option><option>Poor</option></select></div>
+  </div>
+
+  <!-- Section 03 -->
+  <div class="section-head">
+    <div class="section-num">03</div>
+    <div class="section-label">Policy &amp; Property</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="form-grid">
+    <div class="field"><label>Location</label><select id="location"><option>Urban</option><option>Suburban</option><option>Rural</option></select></div>
+    <div class="field"><label>Policy Type</label><select id="policy"><option>Basic</option><option>Comprehensive</option><option>Premium</option></select></div>
+    <div class="field"><label>Previous Claims</label><input type="number" id="claims" min="0" max="20" value="0"></div>
+    <div class="field"><label>Vehicle Age (years)</label><input type="number" id="vehicle" min="0" max="30" value="5"></div>
+    <div class="field"><label>Insurance Duration (yrs)</label><input type="number" id="duration" min="1" max="30" value="3"></div>
+    <div class="field"><label>Property Type</label><select id="property"><option>House</option><option>Apartment</option><option>Condo</option></select></div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-wrap">
+    <button class="predict-btn" id="predictBtn" onclick="predict()">
+      ESTIMATE MY PREMIUM
+      <div class="btn-corner"></div>
+    </button>
+  </div>
+
+  <div id="output"></div>
+
+</div>
+
+<script>
+async function predict() {
+  const btn = document.getElementById('predictBtn');
+  const out = document.getElementById('output');
+
+  const v = {
+    age: document.getElementById('age').value,
+    gender: document.getElementById('gender').value,
+    income: document.getElementById('income').value,
+    marital: document.getElementById('marital').value,
+    dependents: document.getElementById('dependents').value,
+    education: document.getElementById('education').value,
+    occupation: document.getElementById('occupation').value,
+    health: document.getElementById('health').value,
+    smoking: document.getElementById('smoking').value,
+    exercise: document.getElementById('exercise').value,
+    credit: document.getElementById('credit').value,
+    feedback: document.getElementById('feedback').value,
+    location: document.getElementById('location').value,
+    policy: document.getElementById('policy').value,
+    claims: document.getElementById('claims').value,
+    vehicle: document.getElementById('vehicle').value,
+    duration: document.getElementById('duration').value,
+    property: document.getElementById('property').value,
+  };
+
+  btn.disabled = true;
+  out.innerHTML = `<div class="loading"><div class="spinner"></div><span>ANALYSING RISK PROFILE<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span></div>`;
+
+  const prompt = `You are an insurance premium prediction model (Random Forest Regressor trained on 1.2M records). Predict the annual insurance premium in USD for this customer.
+
+Profile:
+Age: ${v.age} | Gender: ${v.gender} | Annual Income: $${Number(v.income).toLocaleString()} | Marital Status: ${v.marital} | Dependents: ${v.dependents} | Education: ${v.education} | Occupation: ${v.occupation} | Health Score: ${v.health}/100 | Location: ${v.location} | Policy Type: ${v.policy} | Previous Claims: ${v.claims} | Vehicle Age: ${v.vehicle} yrs | Credit Score: ${v.credit} | Insurance Duration: ${v.duration} yrs | Feedback: ${v.feedback} | Smoking: ${v.smoking} | Exercise: ${v.exercise} | Property: ${v.property}
+
+Rules: premiums range $300–$5000. Smokers +20-40%, poor health +15-30%, many claims +10% each, low credit +10%, bad feedback +5%. Non-smoker, high health, good credit = lower premium.
+
+Reply ONLY with JSON, no markdown, no explanation:
+{"premium":1234,"risk_level":"Low","risk_score":35,"key_factors":[{"factor":"Smoking","impact":"Increases","note":"Smoker raises risk"},{"factor":"Health Score","impact":"Decreases","note":"Good health lowers premium"},{"factor":"Claims","impact":"Neutral","note":"No prior claims"}]}`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!resp.ok) throw new Error(`API error ${resp.status}`);
+    const data = await resp.json();
+    const text = (data.content || []).map(b => b.text || '').join('').replace(/```json|```/g,'').trim();
+    const r = JSON.parse(text);
+
+    const riskClass = { Low:'risk-Low', Medium:'risk-Medium', High:'risk-High' };
+    const barColor = { Low:'#3a9a3a', Medium:'#f0b429', High:'#c0152a' };
+    const impactClass = i => i==='Increases'?'inc':i==='Decreases'?'dec':'neu';
+    const impactLabel = i => i==='Increases'?'↑ Increases':i==='Decreases'?'↓ Decreases':'→ Neutral';
+    const factorTopColor = i => i==='Increases'?'#c0152a':i==='Decreases'?'#3a9a3a':'#8a8a82';
+    const score = Math.min(100, Math.round(r.risk_score));
+    const today = new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+
+    out.innerHTML = `
+      <div class="result-panel">
+        <div class="corner-tl"></div>
+        <div class="corner-br"></div>
+
+        <div class="result-hero">
+          <div class="result-left">
+            <div class="result-eyebrow">Estimated Annual Premium</div>
+            <div class="result-amount"><span>$</span>${Math.round(r.premium).toLocaleString()}</div>
+            <div class="result-note">AI-powered estimate · Random Forest model · 1.2M training records</div>
+          </div>
+          <div class="risk-pill-wrap">
+            <div class="risk-pill-label">Risk Classification</div>
+            <div class="risk-pill ${riskClass[r.risk_level]}">${r.risk_level} Risk</div>
+          </div>
+        </div>
+
+        <div class="risk-section">
+          <div class="risk-bar-row">
+            <div class="risk-bar-label">Risk Score</div>
+            <div class="risk-track">
+              <div class="risk-fill" style="width:${score}%;background:${barColor[r.risk_level]||'#f0b429'};"></div>
+            </div>
+            <div class="risk-score-num" style="color:${barColor[r.risk_level]||'#f0b429'};">${score}<span style="font-size:10px;color:#8a8a82;">/100</span></div>
+          </div>
+        </div>
+
+        <div class="factors-section">
+          <div class="factors-title">Key Risk Factors</div>
+          <div class="factors-grid">
+            ${r.key_factors.map(f=>`
+              <div class="factor">
+                <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${factorTopColor(f.impact)};"></div>
+                <div class="factor-name">${f.factor}</div>
+                <div class="factor-impact ${impactClass(f.impact)}">${impactLabel(f.impact)}</div>
+                <div class="factor-note">${f.note}</div>
+              </div>`).join('')}
+          </div>
+        </div>
+
+        <div class="result-footer">
+          <div class="result-footer-text">Generated on ${today}</div>
+          <div class="mono-tag">MODEL: RF-REG-v1.0</div>
+        </div>
+      </div>`;
+
+  } catch(e) {
+    out.innerHTML = `<div class="error-box"><div class="error-icon">⚠</div><div>Prediction failed: ${e.message}. Please try again.</div></div>`;
+  }
+  btn.disabled = false;
+}
+</script>
+</body>
+</html>
